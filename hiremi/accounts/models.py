@@ -4,7 +4,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 # Create your models here.
 
 class AccountManager(BaseUserManager):
-    def create_user(self, email, password,first_name, last_name, phone_number):
+    def create_user(self, email, password,first_name, last_name, phone_number,role):
         if not email:
             raise ValueError("users must have an email adress")
         user = self.model(
@@ -12,6 +12,7 @@ class AccountManager(BaseUserManager):
             first_name = first_name,
             last_name = last_name,
             phone_number = phone_number,
+            role=role
         )
         user.set_password(password)
 
@@ -25,6 +26,7 @@ class AccountManager(BaseUserManager):
             first_name = first_name,
             last_name = last_name,
             phone_number = phone_number,
+            role = Account.SUPER_ADMIN
         )
 
         user.is_staff = True
@@ -49,7 +51,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = PhoneNumberField()
-
     role = models.CharField(max_length=40,choices=ROLE_CHOICES,default=APPLICANT)
 
     is_active = models.BooleanField(default=False)
