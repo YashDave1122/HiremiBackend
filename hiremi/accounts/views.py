@@ -3,17 +3,18 @@ from django.contrib.auth import login, logout
 
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import AccountRegisterSerializer, AccountLoginSerializer, AccountSerializer
 from .validators import custom_validation,validate_password
+from .models import Account
 
 
 class AccountRegister(APIView):
-    permission_classes = (AllowAny,)
     def post(self , request):
         try:
             clean_data = custom_validation(request.data)
@@ -27,7 +28,6 @@ class AccountRegister(APIView):
             return Response({"message":str(e)},status = status.HTTP_400_BAD_REQUEST)
 
 class AccountLogin(APIView):
-    permission_classes = (AllowAny,)
     def post(self, request):
         try:
             data = request.data
@@ -46,3 +46,8 @@ class AccountLogin(APIView):
             print(str(e))
             return Response({"message":str(e)},status = status.HTTP_400_BAD_REQUEST)
 
+class AccountListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = AccountSerializer
+    queryset = Account.objects.all()
+    
