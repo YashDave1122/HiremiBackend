@@ -46,12 +46,12 @@ class AccountSerializer(serializers.ModelSerializer):
         ]
 
 
-     #A new serializer for OTP generation and verification.
+#A new serializer for OTP generation and verification.
 User = get_user_model()
 
 class OTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    otp = serializers.CharField(required=False, max_length=6)
+    otp = serializers.CharField(required=True, max_length=6)  # OTP is now always required
 
     def validate(self, data):
         email = data.get('email')
@@ -65,9 +65,7 @@ class OTPSerializer(serializers.Serializer):
         except EmailOTP.DoesNotExist:
             raise serializers.ValidationError("OTP not generated for this user.")
 
-        if otp:
-            if email_otp.otp != otp or not email_otp.is_valid():
-                raise serializers.ValidationError("Invalid or expired OTP.")
-            return user
-        else:
-            return user
+        if email_otp.otp != otp or not email_otp.is_valid():
+            raise serializers.ValidationError("Invalid or expired OTP.")
+
+        return user  # Returns user only if OTP is valid
