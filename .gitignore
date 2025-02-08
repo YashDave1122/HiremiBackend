@@ -1,2 +1,6 @@
 venv
 venv/*
+.ropeproject
+.ropeproject/*
+.mypy_cache
+.mypy_cache/*
