@@ -12,6 +12,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import AccountRegisterSerializer, AccountLoginSerializer, AccountSerializer
 from .validators import custom_validation,validate_password
 from .models import Account
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from .serializers import OTPSerializer
+from .utils import send_otp_to_email
+
 
 
 class AccountRegister(APIView):
@@ -50,4 +57,28 @@ class AccountListView(ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = AccountSerializer
     queryset = Account.objects.all()
+
+   
+
+   #views to handle OTP generation and verification
+User = get_user_model()
+
+class GenerateOTPView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            send_otp_to_email(user)
+            return Response({"message": "OTP sent to email."}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class VerifyOTPView(APIView):
+    def post(self, request):
+        serializer = OTPSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data
+            return Response({"message": "OTP verified. Login successful."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     

@@ -1,8 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 from django.core.exceptions import ValidationError
-
 from phonenumber_field.modelfields import PhoneNumberField
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from .models import EmailOTP
+
 
 USER_MODEL = get_user_model()
 
@@ -41,3 +44,28 @@ class AccountSerializer(serializers.ModelSerializer):
             'is_active','is_staff', 'is_superuser',
             'date_joined', 'last_login',
         ]
+
+
+#A new serializer for OTP generation and verification.
+User = get_user_model()
+
+class OTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(required=True, max_length=6)  # OTP is now always required
+
+    def validate(self, data):
+        email = data.get('email')
+        otp = data.get('otp')
+
+        try:
+            user = User.objects.get(email=email)
+            email_otp = EmailOTP.objects.get(user=user)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User not found.")
+        except EmailOTP.DoesNotExist:
+            raise serializers.ValidationError("OTP not generated for this user.")
+
+        if email_otp.otp != otp or not email_otp.is_valid():
+            raise serializers.ValidationError("Invalid or expired OTP.")
+
+        return user  # Returns user only if OTP is valid

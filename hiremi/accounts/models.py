@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager,PermissionsMixin
 from phonenumber_field.modelfields import PhoneNumberField
+import random
+from django.db import models
+from django.contrib.auth import get_user_model
+from datetime import datetime, timedelta
+
 # Create your models here.
 
 class AccountManager(BaseUserManager):
@@ -74,3 +79,23 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.id} - {self.first_name} {self.last_name}"
+    
+
+#This model will store the OTPs sent to users and manage their validation
+User = get_user_model()
+
+class EmailOTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="email_otp")
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        # OTP is valid for 5 minutes
+        return datetime.now() < self.created_at + timedelta(minutes=5)
+
+    def __str__(self):
+        return f"OTP for {self.user.email}: {self.otp}"
+
+    @staticmethod
+    def generate_otp():
+        return str(random.randint(100000, 999999))
