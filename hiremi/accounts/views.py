@@ -14,7 +14,7 @@ from .serializers import (AccountLoginSerializer, AccountRegisterSerializer,
                           AccountSerializer, EmailOTPSerializer)
 from .utils import (generateTokenResponse, send_login_otp_to_email,
                     send_verification_otp_to_email)
-from .validators import custom_validation, validate_password
+from .validators import custom_validation
 
 REGISTRATION_TIME_LIMIT = 20  # minutes
 
