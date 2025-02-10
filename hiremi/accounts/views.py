@@ -17,6 +17,8 @@ from .utils import (generateTokenResponse, send_login_otp_to_email,
 from .validators import custom_validation
 
 REGISTRATION_TIME_LIMIT = 20  # minutes
+COOKIE_SECURE = False  # True means cookie will only be set for https and not http
+COOKIE_MAX_AGE = 60 * 60 * 24
 
 
 class AccountRegisterView(APIView):
@@ -50,7 +52,10 @@ class AccountRegisterView(APIView):
 
         emailed_otp.delete()
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        refresh = RefreshToken.for_user(user)
+        response = generateTokenResponse(user, refresh)
+
+        return response
 
 
 class AccountLoginView(APIView):
@@ -152,6 +157,7 @@ class RefreshView(TokenRefreshView):
 class AccountLogoutView(APIView):
     def post(self, request):
         try:
+            logout(request)
             refresh_token = request.COOKIES.get("refresh_token")
             if refresh_token:
                 RefreshToken(refresh_token).blacklist()  # Blacklist token
