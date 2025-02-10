@@ -1,71 +1,61 @@
+from django.contrib.auth import authenticate, get_user_model
+from phonenumber_field.serializerfields import PhoneNumberField
+from phonenumbers import NumberParseException, is_valid_number, parse
 from rest_framework import serializers
-from django.contrib.auth import get_user_model, authenticate
-from django.core.exceptions import ValidationError
-from phonenumber_field.modelfields import PhoneNumberField
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
+
 from .models import EmailOTP
 
+User = get_user_model()
 
-USER_MODEL = get_user_model()
 
 class AccountRegisterSerializer(serializers.ModelSerializer):
     class Meta:
-        model = USER_MODEL
-        fields = '__all__'
+        model = User
+        exclude = [
+            "is_superuser",
+            "is_staff",
+            "is_active",
+            "groups",
+            "user_permissions",
+        ]
+        extra_kwargs = {"password": {"write_only": True}}
 
-    def create(self,clean_data):
-        user_obj = USER_MODEL.objects.create_user(email= clean_data['email'],password= clean_data['password'],
-                                                  first_name = clean_data['first_name'], last_name = clean_data['last_name'],
-                                                  phone_number = clean_data['phone_number'],role=clean_data['role'])
-        return user_obj
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
 
-class AccountLoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
-    
-    def check_user(self,clean_data):
-        user = authenticate(username = clean_data['email'],password=clean_data['password'])
-        if not user:
-            raise ValidationError('user not found')
-        return user
-
-    class Meta:
-        model = USER_MODEL
-        fields = ('email','password')
 
 class AccountSerializer(serializers.ModelSerializer):
-    phone_number = PhoneNumberField()
-
     class Meta:
-        model = USER_MODEL
-        fields = [
-            'email', 'first_name', 'last_name', 'phone_number','role',
-            'is_active','is_staff', 'is_superuser',
-            'date_joined', 'last_login',
+        model = User
+        exclude = [
+            "is_superuser",
+            "is_staff",
+            "is_active",
+            "groups",
+            "user_permissions",
         ]
+        extra_kwargs = {
+            "email": {"read_only": True},
+            "password": {"write_only": True},
+        }
 
 
-#A new serializer for OTP generation and verification.
-User = get_user_model()
-
-class OTPSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    otp = serializers.CharField(required=True, max_length=6)  # OTP is now always required
+class AccountLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
 
     def validate(self, data):
-        email = data.get('email')
-        otp = data.get('otp')
+        email = data.get("email")
+        password = data.get("password")
 
-        try:
-            user = User.objects.get(email=email)
-            email_otp = EmailOTP.objects.get(user=user)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User not found.")
-        except EmailOTP.DoesNotExist:
-            raise serializers.ValidationError("OTP not generated for this user.")
+        user = authenticate(email=email, password=password)
+        if not user:
+            raise serializers.ValidationError("Invalid email or password.")
 
-        if email_otp.otp != otp or not email_otp.is_valid():
-            raise serializers.ValidationError("Invalid or expired OTP.")
+        return {"user": user}
 
-        return user  # Returns user only if OTP is valid
+
+class EmailOTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailOTP
+        fields = "__all__"

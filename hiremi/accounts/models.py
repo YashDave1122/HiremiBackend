@@ -1,100 +1,99 @@
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager,PermissionsMixin
-from phonenumber_field.modelfields import PhoneNumberField
 import random
-from django.db import models
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
-from datetime import datetime, timedelta
+from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
+                                        PermissionsMixin)
+from django.db import models
+from django.utils.timezone import now
+from phonenumber_field.modelfields import PhoneNumberField
+
+from .managers import AccountManager
+
 
 # Create your models here.
+class State(models.Model):
+    name = models.CharField(primary_key=True, max_length=50)
 
-class AccountManager(BaseUserManager):
-    def create_user(self, email, password,first_name, last_name, phone_number,role):
-        if not email:
-            raise ValueError("users must have an email adress")
-        user = self.model(
-            email=self.normalize_email(email),
-            first_name = first_name,
-            last_name = last_name,
-            phone_number = phone_number,
-            role=role
-        )
-        user.set_password(password)
+    def __str__(self):
+        return self.name
 
-        user.save()
-        return user
-    
-    def create_superuser(self, email, password,first_name, last_name, phone_number):
-        user = self.create_user(
-            email=self.normalize_email(email),
-            password = password,
-            first_name = first_name,
-            last_name = last_name,
-            phone_number = phone_number,
-            role = Account.SUPER_ADMIN
-        )
-
-        user.is_staff = True
-        user.is_superuser = True
-        user.is_active = True
-        user.save()
-        return user
 
 class Account(AbstractBaseUser, PermissionsMixin):
 
-    SUPER_ADMIN = 'Super Admin'
-    HR = 'HR'
-    APPLICANT = 'Applicant'
-    
-    ROLE_CHOICES = [
-        (SUPER_ADMIN, 'Super Admin'),
-        (HR, 'HR'),
-        (APPLICANT, 'Applicant')
-    ]
+    SUPER_ADMIN = "Super Admin"
+    HR = "HR"
+    APPLICANT = "Applicant"
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+
+    ROLE_CHOICES = [(SUPER_ADMIN, SUPER_ADMIN), (HR, HR), (APPLICANT, APPLICANT)]
+    GENDER_CHOICES = [(MALE, MALE), (FEMALE, FEMALE), (OTHER, OTHER)]
 
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    full_name = models.CharField(max_length=200)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    date_of_birth = models.DateField()
+    current_state = models.ForeignKey(
+        State, on_delete=models.SET_NULL, null=True, related_name="state_users"
+    )
+    current_city = models.CharField(max_length=50)
     phone_number = PhoneNumberField()
-    role = models.CharField(max_length=40,choices=ROLE_CHOICES,default=APPLICANT)
 
-    is_active = models.BooleanField(default=False)
+    birth_state = models.ForeignKey(
+        State,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="state_born_users",
+    )
+    birth_city = models.CharField(max_length=50, null=True, blank=True)
+    whatsapp_number = PhoneNumberField(null=True, blank=True)
+    current_pincode = models.CharField(max_length=10, null=True, blank=True)
+
+    is_differently_abled = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+
+    role = models.CharField(max_length=15, choices=ROLE_CHOICES, default=APPLICANT)
+
+    is_active = models.BooleanField(default=True)
 
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
     date_joined = models.DateTimeField(verbose_name="date joined", auto_now_add=True)
-    last_login = models.DateTimeField(verbose_name="last login", auto_now=True)    
+    last_login = models.DateTimeField(verbose_name="last login", auto_now=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = [
-        'first_name','last_name','phone_number'
-    ]
+    REQUIRED_FIELDS = ["full_name", "phone_number"]
 
     objects = AccountManager()
 
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
-
     def __str__(self):
-        return f"{self.id} - {self.first_name} {self.last_name}"
-    
+        return f"{self.id} - {self.full_name}"
 
-#This model will store the OTPs sent to users and manage their validation
+
+# This model will store the OTPs sent to users and manage their validation
 User = get_user_model()
 
+
 class EmailOTP(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="email_otp")
-    otp = models.CharField(max_length=6)
+    email = models.EmailField(primary_key=True)
+    otp = models.CharField(max_length=6, default=None, null=True, blank=True)
+    is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def is_valid(self):
-        # OTP is valid for 5 minutes
-        return datetime.now() < self.created_at + timedelta(minutes=5)
+    def can_be_regenerated(self):
+        # OTP can be regenerated after a fixed time limit
+        return now() > self.created_at + timedelta(minutes=2)
+
+    def is_valid(self, time_limit=5):
+        # Used to check OTP expiry and registration time limit
+        return now() < self.created_at + timedelta(minutes=time_limit)
 
     def __str__(self):
-        return f"OTP for {self.user.email}: {self.otp}"
+        return f"OTP for {self.email}: {self.otp}"
 
     @staticmethod
     def generate_otp():

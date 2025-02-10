@@ -1,18 +1,18 @@
 from django.urls import path
-from .views import *
-from .views import AccountRegister, AccountLogin, AccountListView, GenerateOTPView, VerifyOTPView
+
+from .views import (AccountDetailView, AccountListView, AccountLoginView,
+                    AccountLogoutView, AccountRegisterView,
+                    CurrentAccountDetailView, GenerateOTPView, RefreshView,
+                    VerifyOTPView)
 
 urlpatterns = [
-    
-    path('register/', AccountRegister.as_view(), name='register'),
-    path('login/', AccountLogin.as_view(), name='login'),
-    path('users/', AccountListView.as_view(), name='user-list'),
-    path('generate-otp/', GenerateOTPView.as_view(), name='generate-otp'),
-    path('verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
+    path("", AccountListView.as_view(), name="account_list"),
+    path("<int:pk>/", AccountDetailView.as_view(), name="account_detail"),
+    path("profile/", CurrentAccountDetailView.as_view(), name="profile"),
+    path("login/", AccountLoginView.as_view(), name="login"),
+    path("refresh_token/", RefreshView.as_view(), name="refresh_token_view"),
+    path("register/", AccountRegisterView.as_view(), name="register"),
+    path("generate-otp/", GenerateOTPView.as_view(), name="generate_otp"),
+    path("verify-otp/", VerifyOTPView.as_view(), name="verify_otp"),
+    path("logout/", AccountLogoutView.as_view(), name="logout"),
 ]
-
-
-
-
-
-
