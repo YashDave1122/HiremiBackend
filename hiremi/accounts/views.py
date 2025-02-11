@@ -2,7 +2,8 @@ from django.contrib.auth import get_user_model, login, logout
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import (ListCreateAPIView,
+                                     RetrieveUpdateDestroyAPIView)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,100 +11,27 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .models import Account, EmailOTP
+from .permissions import IsOwner
 from .serializers import (AccountLoginSerializer, AccountRegisterSerializer,
-                          AccountSerializer, EmailOTPSerializer)
+                          AccountSerializer, GenerateOTPSerializer,
+                          VerifyOTPSerializer)
 from .utils import (generateTokenResponse, send_login_otp_to_email,
                     send_verification_otp_to_email)
-from .validators import custom_validation
 
-REGISTRATION_TIME_LIMIT = 20  # minutes
 COOKIE_SECURE = False  # True means cookie will only be set for https and not http
 COOKIE_MAX_AGE = 60 * 60 * 24
 
 
-class AccountRegisterView(APIView):
-    def post(self, request):
-        try:
-            clean_data = custom_validation(request.data)
-        except ValidationError as e:
-            return Response({"message": e.message}, status=status.HTTP_400_BAD_REQUEST)
-        emailed_otp = EmailOTP.objects.filter(email=clean_data.get("email")).first()
-
-        if not emailed_otp:
-            return Response(
-                {"message": "Email not verified"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not emailed_otp.is_valid(REGISTRATION_TIME_LIMIT):
-            return Response(
-                {"message": "Time limit exceeded, verify email again"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not emailed_otp.is_verified:
-            return Response(
-                {"message": "OTP Invalid"}, status=status.HTTP_403_FORBIDDEN
-            )
-
-        serializer = AccountRegisterSerializer(data=clean_data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        emailed_otp.delete()
-
-        refresh = RefreshToken.for_user(user)
-        response = generateTokenResponse(user, refresh)
-
-        return response
-
-
 class AccountLoginView(APIView):
+    serializer_class = AccountLoginSerializer
+
     def post(self, request):
         data = request.data
         serializer = AccountLoginSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        otp = data.get("otp")
-
-        email_otp = EmailOTP.objects.filter(email=user.email).first()
-
-        # If OTP does not exist, generate and send a new one
-        if not email_otp:
-            send_login_otp_to_email(user)
-            return Response(
-                {"message": "OTP sent to email."},
-                status=status.HTTP_201_CREATED,
-            )
-
-        # If OTP is expired, return error and delete OTP
-        if not email_otp.is_valid():
-            email_otp.delete()  # Remove expired OTPs
-            return Response(
-                {"message": "OTP expired, request a new one"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # If OTP is not provided
-        if not otp:
-            return Response(
-                {"message": "Please enter an OTP"},
-                status=status.HTTP_206_PARTIAL_CONTENT,
-            )
-
-        # If OTP is incorrect
-        if otp != email_otp.otp:
-            return Response(
-                {"message": "Invalid OTP"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        # OTP verified, delete it and generate JWT
-        email_otp.delete()
-
-        refresh = RefreshToken.for_user(user)
+        refresh = serializer.validated_data["refresh"]
         response = generateTokenResponse(user, refresh)
-
         return response
 
 
@@ -159,6 +87,7 @@ class AccountLogoutView(APIView):
         try:
             logout(request)
             refresh_token = request.COOKIES.get("refresh_token")
+
             if refresh_token:
                 RefreshToken(refresh_token).blacklist()  # Blacklist token
 
@@ -174,20 +103,52 @@ class AccountLogoutView(APIView):
             )
 
 
-# views to handle OTP generation and verification
-User = get_user_model()
+class AccountListCreateView(ListCreateAPIView):
+    queryset = Account.objects.all()
+
+    def post(self, request):
+        serializer = AccountRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        email = serializer.validated_data["email"]
+        email_otp = EmailOTP.objects.filter(email=email).order_by("-created_at").first()
+        email_otp.delete()
+
+        refresh = RefreshToken.for_user(user)
+        response = generateTokenResponse(user, refresh)
+
+        return response
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AccountRegisterSerializer
+        return AccountSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return []
+
+
+class AccountRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    serializer_class = AccountSerializer
+    queryset = Account.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return [IsAuthenticated(), IsOwner()]
 
 
 class GenerateOTPView(APIView):
+    serializer_class = GenerateOTPSerializer
+
     def post(self, request):
         email = request.data.get("email")
-        user_exists = User.objects.filter(email=email).exists()
-        if user_exists:
-            return Response(
-                {"message": "User with that email already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
         otp = EmailOTP.objects.filter(email=email).first()
+
+        # timeout logic
         if otp:
             if otp.can_be_regenerated():
                 otp.delete()
@@ -204,42 +165,16 @@ class GenerateOTPView(APIView):
 
 
 class VerifyOTPView(APIView):
+    serializer_class = VerifyOTPSerializer
+
     def post(self, request):
-        email = request.data.get("email")
-        otp = request.data.get("otp")
-        email_otp = EmailOTP.objects.filter(email=email).first()
-        if not email_otp.otp == otp:
-            return Response(
-                {"message": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        if not email_otp.is_valid():
-            return Response(
-                {"message": "OTP expired, request new OTP"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        email_otp.is_verified = True
-        email_otp.save()
+        serializer = VerifyOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = serializer.validated_data.get("email_otp")
+        instance.is_verified = True
+        instance.save()
         return Response(
             {"message": "OTP verified"},
             status=status.HTTP_200_OK,
         )
-
-
-class AccountListView(ListAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = AccountSerializer
-    queryset = Account.objects.all()
-
-
-class AccountDetailView(RetrieveAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = AccountSerializer
-    queryset = Account.objects.all()
-
-
-class CurrentAccountDetailView(RetrieveAPIView):
-    serializer_class = AccountSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user

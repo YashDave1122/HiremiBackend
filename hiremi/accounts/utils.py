@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from .models import Account, EmailOTP
-from .serializers import AccountSerializer, EmailOTPSerializer
+from .serializers import AccountSerializer, GenerateOTPSerializer
 
 COOKIE_SECURE = False  # True means cookie will only be set for https and not http
 COOKIE_MAX_AGE = 60 * 60 * 24
@@ -12,9 +12,9 @@ COOKIE_MAX_AGE = 60 * 60 * 24
 def generate_otp(email):
     # Generate or update OTP
 
-    instance = EmailOTPSerializer(data={"email": email})
-    instance.is_valid(raise_exception=True)
-    instance, created = EmailOTP.objects.get_or_create(email=email)
+    serializer = GenerateOTPSerializer(data={"email": email})
+    serializer.is_valid(raise_exception=True)
+    instance, _ = EmailOTP.objects.get_or_create(email=email)
     instance.otp = EmailOTP.generate_otp()
     instance.save()
     return instance.otp

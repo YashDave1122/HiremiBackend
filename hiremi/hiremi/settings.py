@@ -159,7 +159,7 @@ EMAIL_HOST_PASSWORD = "your_email_password"  # Replace with your Gmail app passw
 DEFAULT_FROM_EMAIL = "your_email@example.com"  # Default sender email
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

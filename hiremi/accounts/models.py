@@ -20,6 +20,7 @@ class State(models.Model):
 
 
 class Account(AbstractBaseUser, PermissionsMixin):
+    REGISTRATION_TIME_LIMIT = 10  # minutes
 
     SUPER_ADMIN = "Super Admin"
     HR = "HR"
@@ -33,6 +34,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=200)
+    father_name = models.CharField(max_length=200)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     date_of_birth = models.DateField()
     current_state = models.ForeignKey(
@@ -57,8 +59,8 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
     role = models.CharField(max_length=15, choices=ROLE_CHOICES, default=APPLICANT)
 
+    # needed for django admin
     is_active = models.BooleanField(default=True)
-
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
