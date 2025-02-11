@@ -62,26 +62,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "full_name",
-            "gender",
-            "date_of_birth",
-            "current_city",
-            "current_state",
-            "phone_number",
-            "birth_state",
-            "birth_city",
-            "whatsapp_number",
-            "current_pincode",
-            "is_differently_abled",
-            "is_verified",
-            "is_superuser",
-            "is_staff",
-            "date_joined",
-            "last_login",
-        ]
+        exclude = ["groups", "user_permissions", "password"]
         extra_kwargs = {
             "is_verified": {"read_only": True},
             "id": {"read_only": True},
@@ -90,7 +71,6 @@ class AccountSerializer(serializers.ModelSerializer):
             "is_staff": {"read_only": True},
             "date_joined": {"read_only": True},
             "role": {"read_only": True},
-            "password": {"write_only": True},
         }
 
 
