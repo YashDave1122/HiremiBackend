@@ -147,6 +147,8 @@ class GenerateOTPView(APIView):
 
     def post(self, request):
         email = request.data.get("email")
+        serializer = GenerateOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         otp = EmailOTP.objects.filter(email=email).first()
 
         # timeout logic

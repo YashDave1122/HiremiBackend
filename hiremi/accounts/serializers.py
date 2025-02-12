@@ -1,7 +1,8 @@
 from django.contrib.auth import authenticate, get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
 from phonenumbers import NumberParseException, is_valid_number, parse
-from rest_framework import serializers
+from rest_framework import exceptions, serializers, status
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Education, EmailOTP
@@ -79,7 +80,7 @@ class AccountSerializer(serializers.ModelSerializer):
 class AccountLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True)
-    otp = serializers.CharField(max_length=6, required=False)
+    otp = serializers.CharField(max_length=4, required=False)
 
     class Meta:
         fields = ["email", "password", "otp"]
@@ -99,7 +100,7 @@ class AccountLoginSerializer(serializers.Serializer):
             if not email_otp:
                 # Generate and send OTP if it doesn't exist
                 self.send_otp(user)
-                raise serializers.ValidationError("OTP sent to email.")
+                raise exceptions.APIException("OTP sent to email.", code=200)
 
             if not email_otp.is_valid():
                 email_otp.delete()
@@ -127,10 +128,7 @@ class GenerateOTPSerializer(serializers.ModelSerializer):
         email = data.get("email")
         user_exists = User.objects.filter(email=email).exists()
         if user_exists:
-            return Response(
-                {"message": "User with that email already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
+            raise serializers.ValidationError("User already exists")
         return super().validate(data)
 
 
@@ -141,7 +139,7 @@ class VerifyOTPSerializer(serializers.ModelSerializer):
         fields = ["email", "otp"]
 
     email = serializers.EmailField(required=True)
-    otp = serializers.CharField(max_length=6, required=True)
+    otp = serializers.CharField(max_length=4, required=True)
 
     def validate(self, data):
         email = data.get("email")

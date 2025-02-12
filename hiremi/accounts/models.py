@@ -98,7 +98,7 @@ class Education(models.Model):
 
 class EmailOTP(models.Model):
     email = models.EmailField(primary_key=True)
-    otp = models.CharField(max_length=6, default=None, null=True, blank=True)
+    otp = models.CharField(max_length=4, default=None, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -115,4 +115,4 @@ class EmailOTP(models.Model):
 
     @staticmethod
     def generate_otp():
-        return str(random.randint(100000, 999999))
+        return str(random.randint(1000, 9999))
