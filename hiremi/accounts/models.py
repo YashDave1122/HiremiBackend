@@ -20,8 +20,6 @@ class State(models.Model):
 
 
 class Account(AbstractBaseUser, PermissionsMixin):
-    REGISTRATION_TIME_LIMIT = 10  # minutes
-
     SUPER_ADMIN = "Super Admin"
     HR = "HR"
     APPLICANT = "Applicant"

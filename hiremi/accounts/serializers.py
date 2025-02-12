@@ -45,11 +45,6 @@ class AccountRegisterSerializer(serializers.ModelSerializer):
         if not email_otp or not email_otp.is_verified:
             raise serializers.ValidationError({"email": "Email not verified."})
 
-        if not email_otp.is_valid(User.REGISTRATION_TIME_LIMIT):
-            raise serializers.ValidationError(
-                {"email": "Registration time limit exceeded, verify email again"}
-            )
-
         if role == User.SUPER_ADMIN:
             raise serializers.ValidationError(
                 {"role": "Super admin can't register this way"}
