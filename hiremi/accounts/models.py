@@ -80,6 +80,22 @@ class Account(AbstractBaseUser, PermissionsMixin):
 User = get_user_model()
 
 
+class Education(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="educations")
+    college_name = models.CharField(max_length=255)
+    degree = models.CharField(max_length=255)
+    branch = models.CharField(max_length=255)
+    college_state = models.ForeignKey(
+        State, on_delete=models.SET_NULL, null=True, related_name="state_educations"
+    )
+    college_city = models.CharField(max_length=255)
+    passing_year = models.IntegerField()
+    percentage = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.full_name} {self.degree} {self.college_name}"
+
+
 class EmailOTP(models.Model):
     email = models.EmailField(primary_key=True)
     otp = models.CharField(max_length=6, default=None, null=True, blank=True)

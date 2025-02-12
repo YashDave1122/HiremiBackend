@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
+from decouple import config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -143,20 +145,15 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Email backend
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# SMTP settings
-EMAIL_HOST = "smtp.gmail.com"  # SMTP server for Gmail
-EMAIL_PORT = 587  # Port number for TLS
-EMAIL_USE_TLS = True  # Use TLS (Transport Layer Security)
-
-# Email credentials
-EMAIL_HOST_USER = "your_email@example.com"  # Replace with your Gmail address
-EMAIL_HOST_PASSWORD = "your_email_password"  # Replace with your Gmail app password
-DEFAULT_FROM_EMAIL = "your_email@example.com"  # Default sender email
+EMAIL_BACKEND = config("EMAIL_BACKEND", default=EMAIL_BACKEND)
+EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="email@example.com")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="123")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),

@@ -4,17 +4,18 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.generics import (ListCreateAPIView,
                                      RetrieveUpdateDestroyAPIView)
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .models import Account, EmailOTP
-from .permissions import IsOwner
+from .models import Account, Education, EmailOTP
+from .permissions import IsOwner, IsUser
 from .serializers import (AccountLoginSerializer, AccountRegisterSerializer,
-                          AccountSerializer, GenerateOTPSerializer,
-                          VerifyOTPSerializer)
+                          AccountSerializer, EducationSerializer,
+                          GenerateOTPSerializer, VerifyOTPSerializer)
 from .utils import (generateTokenResponse, send_login_otp_to_email,
                     send_verification_otp_to_email)
 
@@ -138,7 +139,7 @@ class AccountRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return [IsAuthenticated()]
-        return [IsAuthenticated(), IsOwner()]
+        return [IsAuthenticated(), IsUser()]
 
 
 class GenerateOTPView(APIView):
@@ -178,3 +179,20 @@ class VerifyOTPView(APIView):
             {"message": "OTP verified"},
             status=status.HTTP_200_OK,
         )
+
+
+class EducationViewSet(ModelViewSet):
+    serializer_class = EducationSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id")
+        return Education.objects.filter(user_id=user_id)
+
+    def perform_create(self, serializer):
+        user_id = self.kwargs.get("user_id")
+        serializer.save(user_id=user_id)
+
+    def get_permission_classes(self):
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return IsOwner
