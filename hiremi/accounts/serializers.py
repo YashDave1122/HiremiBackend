@@ -119,9 +119,10 @@ class AccountLoginSerializer(serializers.Serializer):
         return {"user": user, "refresh": refresh}
 
 
-class GenerateOTPSerializer(serializers.ModelSerializer):
+class GenerateOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
     class Meta:
-        model = EmailOTP
         fields = ["email"]
 
     def validate(self, data):

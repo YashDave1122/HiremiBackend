@@ -147,10 +147,7 @@ class GenerateOTPView(APIView):
 
     def post(self, request):
         email = request.data.get("email")
-        serializer = GenerateOTPSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         otp = EmailOTP.objects.filter(email=email).first()
-
         # timeout logic
         if otp:
             if otp.can_be_regenerated():
@@ -160,6 +157,8 @@ class GenerateOTPView(APIView):
                     {"message": "wait 2 minutes before requesting another OTP"},
                     status=status.HTTP_429_TOO_MANY_REQUESTS,
                 )
+        serializer = GenerateOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         send_verification_otp_to_email(email)
         return Response(
