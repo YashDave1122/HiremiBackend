@@ -1,23 +1,14 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (AccountListCreateView, AccountLoginView, AccountLogoutView,
-                    AccountRetrieveUpdateDestroyView, EducationViewSet,
-                    GenerateOTPView, RefreshView, VerifyOTPView)
+from .views import AccountViewSet, EducationViewSet
 
 router = DefaultRouter()
 router.register(r"(?P<user_id>\d)/education", EducationViewSet, basename="education")
+router.register(r"", AccountViewSet, basename="account")
 
 urlpatterns = [
-    path("", AccountListCreateView.as_view(), name="account_list"),
-    path(
-        "<int:pk>/", AccountRetrieveUpdateDestroyView.as_view(), name="account_detail"
-    ),
-    path("login/", AccountLoginView.as_view(), name="login"),
-    path("logout/", AccountLogoutView.as_view(), name="logout"),
-    path("refresh_token/", RefreshView.as_view(), name="refresh_token_view"),
-    path("generate_otp/", GenerateOTPView.as_view(), name="generate_otp"),
-    path("verify_otp/", VerifyOTPView.as_view(), name="verify_otp"),
+    path("", include(router.urls)),
     path(
         "<int:user_id>/education/",
         EducationViewSet.as_view({"get": "list", "post": "create"}),

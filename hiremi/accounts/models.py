@@ -114,3 +114,9 @@ class EmailOTP(models.Model):
     @staticmethod
     def generate_otp():
         return str(random.randint(1000, 9999))
+
+    def refresh_otp(self):
+        self.otp = self.generate_otp()
+        self.created_at = now()
+        self.save()
+        return self.otp

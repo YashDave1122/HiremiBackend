@@ -3,26 +3,13 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from .models import Account, EmailOTP
-from .serializers import AccountSerializer, GenerateOTPSerializer
+from .serializers import AccountSerializer
 
 COOKIE_SECURE = False  # True means cookie will only be set for https and not http
 COOKIE_MAX_AGE = 60 * 60 * 24
 
 
-def generate_otp(email):
-    # Generate or update OTP
-
-    serializer = GenerateOTPSerializer(data={"email": email})
-    serializer.is_valid(raise_exception=True)
-    instance, _ = EmailOTP.objects.get_or_create(email=email)
-    instance.otp = EmailOTP.generate_otp()
-    instance.save()
-    return instance.otp
-
-
-def send_login_otp_to_email(user):
-    otp = generate_otp(user.email)
-
+def send_login_otp_to_email(user, otp):
     # Send email
     subject = "Your OTP for login"
     message = (
@@ -31,9 +18,7 @@ def send_login_otp_to_email(user):
     send_mail(subject, message, "your_email@example.com", [user.email])
 
 
-def send_verification_otp_to_email(email):
-    otp = generate_otp(email)
-
+def send_verification_otp_to_email(email, otp):
     # Send email
     subject = "Your OTP for verification"
     message = f"Hi {email},\n\nYour OTP is: {otp}\n\nIt is valid for 5 minutes."

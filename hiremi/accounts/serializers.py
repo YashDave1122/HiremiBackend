@@ -38,7 +38,7 @@ class AccountRegisterSerializer(serializers.ModelSerializer):
             )
 
         if not email or User.objects.filter(email=email).exists():
-            raise ValidationError({"message": "Choose another email"})
+            raise serializers.ValidationError({"message": "Choose another email"})
 
         email_otp = EmailOTP.objects.filter(email=email).order_by("-created_at").first()
 
@@ -88,28 +88,15 @@ class AccountLoginSerializer(serializers.Serializer):
 
         user = authenticate(username=email, password=password)
         if not user:
-            raise serializers.ValidationError("Invalid email or password.")
-
-        if user.role == User.SUPER_ADMIN:
-            email_otp = EmailOTP.objects.filter(email=email).first()
-
-            if not email_otp:
-                # Generate and send OTP if it doesn't exist
-                self.send_otp(user)
-                raise exceptions.APIException("OTP sent to email.", code=200)
-
-            if not email_otp.is_valid():
-                email_otp.delete()
-                raise serializers.ValidationError("OTP expired, request a new one.")
-
+            raise serializers.ValidationError("Incorrect email or password.")
+        
+        email_otp = EmailOTP.objects.filter(email=email).order_by("-created_at").first()
+        if email_otp and user.role == User.SUPER_ADMIN:
             if not otp:
                 raise serializers.ValidationError("Please enter an OTP.")
 
             if otp != email_otp.otp:
                 raise serializers.ValidationError("Invalid OTP.")
-
-            # OTP verified, delete it
-            email_otp.delete()
 
         refresh = RefreshToken.for_user(user)
         return {"user": user, "refresh": refresh}
