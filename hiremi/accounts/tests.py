@@ -3,7 +3,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import EmailOTP, State
+from .models import EmailOTP, State, City
 
 User = get_user_model()
 
@@ -26,6 +26,7 @@ class AccountTests(APITestCase):
         self.wrong_otp = "9999"
         self.valid_phone_number = "+919348758478"
         self.state = State.objects.create(name="Gujarat")
+        self.city = City.objects.create(name="Vadodara", state=self.state)
 
         # Create a user with an existing email
         self.user = User.objects.create_user(
@@ -33,10 +34,10 @@ class AccountTests(APITestCase):
             password="SecurePass123",
             phone_number=self.valid_phone_number,
             full_name="Existing in Test",
-            gender="male",
+            gender="Male",
             date_of_birth="2002-02-01",
-            current_state=State.objects.first(),
-            current_city="Vadodara",
+            current_state=self.state,
+            current_city=self.city,
         )
 
     def test_generate_otp(self):
@@ -104,10 +105,10 @@ class AccountTests(APITestCase):
                 "phone_number": self.valid_phone_number,
                 "father_name": "father",
                 "full_name": "Registration Test",
-                "gender": "male",
+                "gender": "Male",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": "Vadodara",
+                "current_city": str(self.city.name),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -134,10 +135,10 @@ class AccountTests(APITestCase):
                 "phone_number": self.valid_phone_number,
                 "father_name": "father",
                 "full_name": "Registration Test",
-                "gender": "male",
+                "gender": "Male",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": "Vadodara",
+                "current_city": str(self.city.name),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -150,11 +151,11 @@ class AccountTests(APITestCase):
                 "password": "SecurePass123",
                 "phone_number": "123",  # Invalid phone_number
                 "full_name": "Registration Test",
-                "gender": "male",
+                "gender": "Male",
                 "father_name": "father",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": "Vadodara",
+                "current_city": str(self.city.name),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -168,10 +169,10 @@ class AccountTests(APITestCase):
                 "phone_number": self.valid_phone_number,
                 "father_name": "father",
                 "full_name": "Registration Test",
-                "gender": "male",
+                "gender": "Male",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": "Vadodara",
+                "current_city": str(self.city.name),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)

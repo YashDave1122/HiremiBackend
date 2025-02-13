@@ -5,9 +5,21 @@ from rest_framework import exceptions, serializers, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Education, EmailOTP
+from .models import City, Education, EmailOTP, State
 
 User = get_user_model()
+
+
+class StateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = State
+        fields = "__all__"
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = "__all__"
 
 
 class AccountRegisterSerializer(serializers.ModelSerializer):
@@ -89,7 +101,7 @@ class AccountLoginSerializer(serializers.Serializer):
         user = authenticate(username=email, password=password)
         if not user:
             raise serializers.ValidationError("Incorrect email or password.")
-        
+
         email_otp = EmailOTP.objects.filter(email=email).order_by("-created_at").first()
         if email_otp and user.role == User.SUPER_ADMIN:
             if not otp:
@@ -100,6 +112,10 @@ class AccountLoginSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user)
         return {"user": user, "refresh": refresh}
+
+
+class AccountLogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(max_length=150, required=False)
 
 
 class GenerateOTPSerializer(serializers.Serializer):

@@ -19,6 +19,20 @@ class State(models.Model):
         return self.name
 
 
+class City(models.Model):
+    name = models.CharField(max_length=50)
+    state = models.ForeignKey(
+        State, on_delete=models.SET_NULL, related_name="state_cities", null=True
+    )
+
+    def __str__(self):
+        return f"{self.name} - {self.state}"
+
+    class Meta:
+        verbose_name_plural = "cities"
+        unique_together = ["name","state"]
+
+
 class Account(AbstractBaseUser, PermissionsMixin):
     SUPER_ADMIN = "Super Admin"
     HR = "HR"
@@ -38,7 +52,10 @@ class Account(AbstractBaseUser, PermissionsMixin):
     current_state = models.ForeignKey(
         State, on_delete=models.SET_NULL, null=True, related_name="state_users"
     )
-    current_city = models.CharField(max_length=50)
+    current_city = models.ForeignKey(
+        City, on_delete=models.SET_NULL, null=True, related_name="city_users"
+    )
+
     phone_number = PhoneNumberField()
 
     birth_state = models.ForeignKey(
@@ -48,7 +65,13 @@ class Account(AbstractBaseUser, PermissionsMixin):
         blank=True,
         related_name="state_born_users",
     )
-    birth_city = models.CharField(max_length=50, null=True, blank=True)
+    birth_city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="city_born_users",
+    )
     whatsapp_number = PhoneNumberField(null=True, blank=True)
     current_pincode = models.CharField(max_length=10, null=True, blank=True)
 

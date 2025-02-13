@@ -7,11 +7,12 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Account, Education, EmailOTP
+from .models import Account, City, Education, EmailOTP, State
 from .permissions import IsOwner, IsOwnerOrReadOnly, IsSelf, IsSelfOrReadOnly
 from .serializers import (AccountLoginSerializer, AccountRegisterSerializer,
-                          AccountSerializer, EducationSerializer,
-                          GenerateOTPSerializer, VerifyOTPSerializer)
+                          AccountSerializer, CitySerializer,AccountLogoutSerializer,
+                          EducationSerializer, GenerateOTPSerializer,
+                          StateSerializer, VerifyOTPSerializer)
 from .utils import (generate_refresh_response, generate_token_response,
                     send_login_otp_to_email, send_verification_otp_to_email)
 
@@ -30,6 +31,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             return VerifyOTPSerializer
         if self.action == "login":
             return AccountLoginSerializer
+        if self.action == "logout":
+            return AccountLogoutSerializer
         if self.action == "refresh_token":
             return TokenRefreshSerializer
         return AccountSerializer
@@ -106,7 +109,7 @@ class AccountViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
         logout(request)
-        refresh_token = request.COOKIES.get("refresh_token")
+        refresh_token = request.COOKIES.get("refresh_token") or request.data.get("refresh")
 
         if refresh_token:
             try:
@@ -176,6 +179,22 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Invalid Refresh Token"}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class StateViewSet(viewsets.ModelViewSet):
+    serializer_class = StateSerializer
+    queryset = State.objects.order_by("name").all()
+
+    @action(detail=True, methods=["get"], name=None)
+    def cities(self, request, pk=None):
+        cities = City.objects.filter(state=self.get_object())
+        serializer = CitySerializer(cities, many=True)
+        return Response(serializer.data)
+
+
+class CityViewSet(viewsets.ModelViewSet):
+    serializer_class = CitySerializer
+    queryset = City.objects.order_by("name").all()
 
 
 class EducationViewSet(viewsets.ModelViewSet):
