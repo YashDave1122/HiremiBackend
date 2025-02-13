@@ -25,7 +25,7 @@ def send_verification_otp_to_email(email, otp):
     send_mail(subject, message, "your_email@example.com", [email])
 
 
-def generateTokenResponse(user, refresh):
+def generate_token_response(user, refresh):
     response = Response(
         {
             "user": AccountSerializer(user).data,
@@ -52,4 +52,31 @@ def generateTokenResponse(user, refresh):
     )
 
     response["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
+def generate_refresh_response(data):
+    response = Response(data, status=status.HTTP_200_OK)
+
+    # set new tokens in cookies
+    if "access" in data:
+        response.set_cookie(
+            "access_token",
+            data["access"],
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite="Lax",
+        )
+
+    if "refresh" in data:
+        response.set_cookie(
+            "refresh_token",
+            data["refresh"],
+            httponly=True,
+            secure=COOKIE_SECURE,
+            samesite="Lax",
+        )
+
+    response["Access-Control-Allow-Credentials"] = "true"
+
     return response

@@ -8,15 +8,12 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Account, Education, EmailOTP
-from .permissions import IsOwner, IsSelf, IsSelfOrReadOnly, IsOwnerOrReadOnly
+from .permissions import IsOwner, IsOwnerOrReadOnly, IsSelf, IsSelfOrReadOnly
 from .serializers import (AccountLoginSerializer, AccountRegisterSerializer,
                           AccountSerializer, EducationSerializer,
                           GenerateOTPSerializer, VerifyOTPSerializer)
-from .utils import (generateTokenResponse, send_login_otp_to_email,
-                    send_verification_otp_to_email)
-
-COOKIE_SECURE = False  # True means cookie will only be set for https and not http
-COOKIE_MAX_AGE = 60 * 60 * 24
+from .utils import (generate_refresh_response, generate_token_response,
+                    send_login_otp_to_email, send_verification_otp_to_email)
 
 User = get_user_model()
 
@@ -40,7 +37,7 @@ class AccountViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
             return [IsAuthenticated()]
-        if self.action in ["update","destroy"]:
+        if self.action in ["update", "destroy"]:
             return [IsSelfOrReadOnly()]
         return [AllowAny()]
 
@@ -55,7 +52,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         email_otp.delete()
 
         refresh = RefreshToken.for_user(user)
-        return generateTokenResponse(user, refresh)
+        return generate_token_response(user, refresh)
 
     @action(detail=False, methods=["post"])
     def login(self, request):
@@ -83,7 +80,7 @@ class AccountViewSet(viewsets.ModelViewSet):
             email_otp.delete()
 
         refresh = serializer.validated_data["refresh"]
-        return generateTokenResponse(user, refresh)
+        return generate_token_response(user, refresh)
 
     @action(detail=False, methods=["post"])
     def resend_login_otp(self, request):
@@ -173,28 +170,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         try:
             if serializer.is_valid():
                 data = serializer.validated_data
-                response = Response(data, status=status.HTTP_200_OK)
-
-                # set new tokens in cookies
-                if "access" in data:
-                    response.set_cookie(
-                        "access_token",
-                        data["access"],
-                        httponly=True,
-                        secure=True,
-                        samesite="Lax",
-                    )
-
-                if "refresh" in data:
-                    response.set_cookie(
-                        "refresh_token",
-                        data["refresh"],
-                        httponly=True,
-                        secure=True,
-                        samesite="Lax",
-                    )
-
-                response["Access-Control-Allow-Credentials"] = "true"
+                response = generate_refresh_response(data)
                 return response
         except:
             return Response(

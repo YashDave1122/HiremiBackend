@@ -23,9 +23,9 @@ class Account(AbstractBaseUser, PermissionsMixin):
     SUPER_ADMIN = "Super Admin"
     HR = "HR"
     APPLICANT = "Applicant"
-    MALE = "male"
-    FEMALE = "female"
-    OTHER = "other"
+    MALE = "Male"
+    FEMALE = "Female"
+    OTHER = "Other"
 
     ROLE_CHOICES = [(SUPER_ADMIN, SUPER_ADMIN), (HR, HR), (APPLICANT, APPLICANT)]
     GENDER_CHOICES = [(MALE, MALE), (FEMALE, FEMALE), (OTHER, OTHER)]
