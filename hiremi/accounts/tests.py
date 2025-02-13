@@ -108,7 +108,7 @@ class AccountTests(APITestCase):
                 "gender": "Male",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": str(self.city.name),
+                "current_city": str(self.city.id),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -138,7 +138,7 @@ class AccountTests(APITestCase):
                 "gender": "Male",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": str(self.city.name),
+                "current_city": str(self.city.id),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -155,7 +155,7 @@ class AccountTests(APITestCase):
                 "father_name": "father",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": str(self.city.name),
+                "current_city": str(self.city.id),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -172,7 +172,7 @@ class AccountTests(APITestCase):
                 "gender": "Male",
                 "date_of_birth": "2002-02-01",
                 "current_state": "Gujarat",
-                "current_city": str(self.city.name),
+                "current_city": str(self.city.id),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
