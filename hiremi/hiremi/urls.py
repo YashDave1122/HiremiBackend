@@ -22,4 +22,5 @@ from rest_framework.routers import DefaultRouter
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("accounts.urls"), name="accounts"),
+    path('jobs/', include('jobs.urls')),
 ]

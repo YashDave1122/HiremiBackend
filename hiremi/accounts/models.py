@@ -30,7 +30,7 @@ class City(models.Model):
 
     class Meta:
         verbose_name_plural = "cities"
-        unique_together = ["name", "state"]
+        unique_together = ["name","state"]
 
 
 class Account(AbstractBaseUser, PermissionsMixin):
@@ -109,10 +109,7 @@ class Education(models.Model):
     college_state = models.ForeignKey(
         State, on_delete=models.SET_NULL, null=True, related_name="state_educations"
     )
-    college_city = models.ForeignKey(
-        City, on_delete=models.SET_NULL, null=True, related_name="city_educations"
-    )
-
+    college_city = models.CharField(max_length=255)
     passing_year = models.IntegerField()
     percentage = models.FloatField(null=True, blank=True)
 
