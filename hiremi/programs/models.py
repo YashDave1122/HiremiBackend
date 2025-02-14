@@ -25,17 +25,16 @@ class Program(models.Model):
     ]
 
     name = models.CharField(max_length=255, unique=True)  # Program name
-    fee = models.DecimalField(max_digits=10, decimal_places=2)  # Program fee
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Program fee
+    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  
     description = models.TextField(blank=True, null=True)  # Program description
-    duration_weeks = models.IntegerField(default=0)  # Duration in weeks
-    start_date = models.DateField(null=True, blank=True)  # Program start date
-    end_date = models.DateField(null=True, blank=True)  # Program end date
-    seats_available = models.PositiveIntegerField(default=0)  # Number of seats available
+    duration = models.CharField(max_length=50, null=True, blank=True)
     is_active =  models.CharField(max_length=5,choices=[('Yes', 'Yes'), ('No', 'No')],default='Yes')  # Whether the program is active
     created_at = models.DateTimeField(auto_now_add=True)  # When the program was created
     updated_at = models.DateTimeField(auto_now=True)  # When the program was last updated
     mode_of_learning = models.CharField(max_length=10, choices=MODE_CHOICES, default='Online')  # Online/Offline/Hybrid 
     course_level = models.CharField(max_length=15, choices=DIFFICULTY_CHOICES, default='Beginner')  # Course level
+    internship_company = models.CharField(max_length=255, null=True, blank=True)
     enrollment_deadline = models.DateField(null=True, blank=True)  # Last date to enroll
    
 
@@ -48,6 +47,8 @@ class Enrollment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enrollments")
     program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name="enrollments")
     date_enrolled = models.DateTimeField(auto_now_add=True)  # When the enrollment was created
+    end_date = models.DateField(null=True, blank=True)  # Program end date
+
  
  # Define static Variable
     PENDING  ='Pending'
