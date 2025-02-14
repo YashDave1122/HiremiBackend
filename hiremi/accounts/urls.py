@@ -4,21 +4,20 @@ from rest_framework.routers import DefaultRouter
 from .views import AccountViewSet, CityViewSet, EducationViewSet, StateViewSet
 
 router = DefaultRouter()
-router.register(r"(?P<user_id>\d)/education", EducationViewSet, basename="education")
+router.register(r"education", EducationViewSet, basename="education")
 router.register(r"accounts", AccountViewSet, basename="account")
 router.register(r"states", StateViewSet, basename="state")
 router.register(r"cities", CityViewSet, basename="city")
 
-
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "<int:user_id>/education/",
+        "accounts/<int:user_id>/education/",
         EducationViewSet.as_view({"get": "list", "post": "create"}),
-        name="education-list",
+        name="user-education-list",
     ),
     path(
-        "<int:user_id>/education/<int:pk>/",
+        "accounts/<int:user_id>/education/<int:pk>/",
         EducationViewSet.as_view(
             {
                 "get": "retrieve",
@@ -27,6 +26,6 @@ urlpatterns = [
                 "delete": "destroy",
             }
         ),
-        name="education-detail",
+        name="user-education-detail",
     ),
 ]

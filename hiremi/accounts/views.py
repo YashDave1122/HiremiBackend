@@ -9,10 +9,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Account, City, Education, EmailOTP, State
 from .permissions import IsOwner, IsOwnerOrReadOnly, IsSelf, IsSelfOrReadOnly
-from .serializers import (AccountLoginSerializer, AccountRegisterSerializer,
-                          AccountSerializer, CitySerializer,AccountLogoutSerializer,
-                          EducationSerializer, GenerateOTPSerializer,
-                          StateSerializer, VerifyOTPSerializer)
+from .serializers import (AccountLoginSerializer, AccountLogoutSerializer,
+                          AccountRegisterSerializer, AccountSerializer,
+                          CitySerializer, EducationSerializer,
+                          GenerateOTPSerializer, StateSerializer,
+                          VerifyOTPSerializer)
 from .utils import (generate_refresh_response, generate_token_response,
                     send_login_otp_to_email, send_verification_otp_to_email)
 
@@ -109,7 +110,9 @@ class AccountViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
         logout(request)
-        refresh_token = request.COOKIES.get("refresh_token") or request.data.get("refresh")
+        refresh_token = request.COOKIES.get("refresh_token") or request.data.get(
+            "refresh"
+        )
 
         if refresh_token:
             try:
@@ -202,13 +205,18 @@ class EducationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user_id = self.kwargs.get("user_id")
-        return Education.objects.filter(user_id=user_id)
+        if user_id:
+            return Education.objects.filter(user_id=user_id)
+        return Education.objects.all()
 
     def perform_create(self, serializer):
         user_id = self.kwargs.get("user_id")
-        serializer.save(user_id=user_id)
+        if user_id:
+            serializer.save(user_id=user_id)
+        else:
+            serializer.save()
 
     def get_permission_classes(self):
         if self.action in ["list", "retrieve"]:
             return [IsAuthenticated()]
-        return IsOwner
+        return [IsOwner()]
