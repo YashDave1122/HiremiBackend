@@ -89,7 +89,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(verbose_name="last login", auto_now=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["full_name", "phone_number"]
+    REQUIRED_FIELDS = ["full_name", "phone_number", "father_name", "gender", "date_of_birth"]
 
     objects = AccountManager()
 
