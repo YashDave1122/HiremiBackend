@@ -1,24 +1,7 @@
 from django.db import models
 
 
-# Job Model
-# class Job(models.Model):
-#     title = models.CharField(max_length=255)
-#     description = models.TextField()
-#     eligibility = models.TextField()
-#     about_company = models.TextField()
-#     job_type = models.CharField(
-#         max_length=20,
-#         choices=[("intern", "Intern"), ("fresher", "Fresher"), ("exp", "Experienced")],
-#     )
-#     work_mode = models.CharField(
-#         max_length=10,
-#         choices=[("remote", "Remote"), ("onsite", "Onsite"), ("hybrid", "Hybrid")],
-#     )
-#     experience_required = models.IntegerField()
 
-#     def __str__(self):
-#         return self.title
 
 class Job(models.Model):
     JOB_TYPES = [

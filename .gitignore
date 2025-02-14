@@ -1,2 +1,19 @@
-venv
-venv/*
+venv/
+.ropeproject/
+.mypy_cache/
+**/__pycache__/
+tests/
+nohup.out
+.env
+
+
+# Ignore SQLite DB
+db.sqlite3
+
+# Ignore Python Cache Files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore Django Migrations Cache
+*/migrations/__pycache__/
