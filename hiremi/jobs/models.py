@@ -5,7 +5,7 @@ class Job(models.Model):
     JOB_TYPES = [
         ("intern", "Intern"),
         ("fresher", "Fresher"),
-        ("exp", "Experienced"),
+        
     ]
     
     WORK_MODES = [
