@@ -8,6 +8,7 @@ class Notification(models.Model):
     type = models.CharField(max_length=255)  # Type of notification (e.g., system, job update, program enrollment)
     heading = models.CharField(max_length=255)
     content = models.CharField(max_length=255)  # The message content
+    seen = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when created
 
     def __str__(self):
