@@ -25,6 +25,16 @@ def send_verification_otp_to_email(email, otp):
     send_mail(subject, message, "your_email@example.com", [email])
 
 
+def send_password_reset_otp_to_email(user, otp):
+    # Send email
+    subject = "Password Reset OTP"
+    message = (
+        f"Hi {user.full_name},\n\nYour OTP is: {otp}\n\nIt is valid for 5 minutes."
+    )
+    send_mail(subject, message, "your_email@example.com", [user.email])
+
+
+
 def generate_token_response(user, refresh):
     response = Response(
         {

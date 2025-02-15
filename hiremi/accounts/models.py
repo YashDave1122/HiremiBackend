@@ -144,5 +144,34 @@ class EmailOTP(models.Model):
     def refresh_otp(self):
         self.otp = self.generate_otp()
         self.created_at = now()
+        self.is_verified = False
+        self.save()
+        return self.otp
+
+class PasswordResetOTP(models.Model):
+    email = models.EmailField(primary_key=True)
+    otp = models.CharField(max_length=4, default=None, null=True, blank=True)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def can_be_regenerated(self):
+        # OTP can be regenerated after a fixed time limit
+        return now() > self.created_at + timedelta(minutes=2)
+
+    def is_valid(self, time_limit=5):
+        # Used to check OTP expiry and registration time limit
+        return now() < self.created_at + timedelta(minutes=time_limit)
+
+    def __str__(self):
+        return f"Password reset OTP for {self.email}: {self.otp}"
+
+    @staticmethod
+    def generate_otp():
+        return str(random.randint(1000, 9999))
+
+    def refresh_otp(self):
+        self.otp = self.generate_otp()
+        self.created_at = now()
+        self.is_verified = False
         self.save()
         return self.otp

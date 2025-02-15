@@ -7,15 +7,16 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Account, City, Education, EmailOTP, State
+from .models import Account, City, Education, EmailOTP, State, PasswordResetOTP
 from .permissions import IsOwner, IsOwnerOrReadOnly, IsSelf, IsSelfOrReadOnly
 from .serializers import (AccountLoginSerializer, AccountLogoutSerializer,
                           AccountRegisterSerializer, AccountSerializer,
                           CitySerializer, EducationSerializer,
                           GenerateOTPSerializer, StateSerializer,
-                          VerifyOTPSerializer)
+                          VerifyOTPSerializer, GeneratePasswordResetOTPSerializer,
+                          VerifyPasswordResetOTPSerializer, ResetPasswordSerializer)
 from .utils import (generate_refresh_response, generate_token_response,
-                    send_login_otp_to_email, send_verification_otp_to_email)
+                    send_login_otp_to_email, send_verification_otp_to_email, send_password_reset_otp_to_email)
 
 User = get_user_model()
 
@@ -36,6 +37,12 @@ class AccountViewSet(viewsets.ModelViewSet):
             return AccountLogoutSerializer
         if self.action == "refresh_token":
             return TokenRefreshSerializer
+        if self.action == "generate_password_reset_otp":
+            return GeneratePasswordResetOTPSerializer
+        if self.action == "verify_password_reset_otp":
+            return VerifyPasswordResetOTPSerializer
+        if self.action == "reset_password":
+            return ResetPasswordSerializer
         return AccountSerializer
 
     def get_permissions(self):
@@ -158,6 +165,54 @@ class AccountViewSet(viewsets.ModelViewSet):
         instance.save()
 
         return Response({"message": "OTP verified"}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def generate_password_reset_otp(self,request):
+        serializer = GeneratePasswordResetOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+        user = serializer.validated_data["user"]
+
+        otp_instance, created = PasswordResetOTP.objects.get_or_create(email=email)
+
+        if not created and not otp_instance.can_be_regenerated():
+            return Response(
+                {"message": "Wait 2 minutes before requesting another OTP"},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        # Update existing OTP or create a new one
+        otp = otp_instance.refresh_otp()
+        send_password_reset_otp_to_email(user, otp)
+        return Response(
+            {"message": "Password reset OTP sent to email."}, status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def verify_password_reset_otp(self, request):
+        serializer = VerifyPasswordResetOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = serializer.validated_data.get("reset_otp")
+        instance.is_verified = True
+        instance.save()
+
+        return Response({"message": "OTP verified"}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def reset_password(self,request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.context.get("user")
+        reset_otp = serializer.context.get("reset_otp")
+        password = serializer.validated_data.get("password")
+        user.set_password(password)
+        user.save()
+        reset_otp.delete()
+
+        return Response({"message": "Password changed"}, status=status.HTTP_200_OK)
+        
 
     @action(detail=False, methods=["post"])
     def refresh_token(self, request):

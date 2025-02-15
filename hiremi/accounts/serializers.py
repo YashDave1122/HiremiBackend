@@ -5,7 +5,7 @@ from rest_framework import exceptions, serializers, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import City, Education, EmailOTP, State
+from .models import City, Education, EmailOTP, State, PasswordResetOTP
 
 User = get_user_model()
 
@@ -165,3 +165,81 @@ class EducationSerializer(serializers.ModelSerializer):
         model = Education
         fields = "__all__"
         read_only_fields = ["user"]
+
+
+class GeneratePasswordResetOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        fields = ["email"]
+
+    def validate(self, data):
+        email = data.get("email")
+        user = User.objects.filter(email=email).first()
+        if not user:
+            raise serializers.ValidationError("User does not exist")
+        data["user"] = user
+        return data
+    
+
+class VerifyPasswordResetOTPSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PasswordResetOTP
+        fields = ["email", "otp"]
+
+    email = serializers.EmailField(required=True)
+    otp = serializers.CharField(max_length=4, required=True)
+
+    def validate(self, data):
+        email = data.get("email")
+        otp = data.get("otp")
+
+        reset_otp = PasswordResetOTP.objects.filter(email=email).order_by("-created_at").first()
+
+        if not reset_otp:
+            raise serializers.ValidationError({"email": "No OTP for that email"})
+
+        if reset_otp.otp != otp:
+            raise serializers.ValidationError({"otp": "Invalid OTP"})
+
+        if not reset_otp.is_valid():
+            raise serializers.ValidationError({"otp": "OTP expired, request a new one"})
+
+        data["reset_otp"] = reset_otp
+        return data
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        email = data.get("email")
+        password = data.get("password")
+        confirm_password = data.get("confirm_password")
+
+        # Check if passwords match
+        if password != confirm_password:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
+        
+        if len(password) < 8:
+            raise serializers.ValidationError(
+                {"password": "Password must be atleast 8 characters"}
+            )
+
+        # Check if OTP is verified
+        user = User.objects.filter(email=email).first()
+        if not user:
+            raise serializers.ValidationError({"email": "User not found"})
+
+        reset_otp = PasswordResetOTP.objects.filter(email=user.email, is_verified=True).first()
+        if not reset_otp:
+            raise serializers.ValidationError({"otp": "OTP not verified or expired"})
+
+        # Save user instance in context for use in the view
+        self.context["user"] = user
+        self.context["reset_otp"] = reset_otp
+
+        return data
