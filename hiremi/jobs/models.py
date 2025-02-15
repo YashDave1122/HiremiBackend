@@ -2,19 +2,27 @@ from django.db import models
 
 # Create your models here.
 class Job(models.Model):
+    INTERN = "Intern"
+    FRESHER = "Fresher"
+    EXPERIENCED = "Experienced"
+
     JOB_TYPES = [
-        ("intern", "Intern"),
-        ("fresher", "Fresher"),
-        
+        (INTERN, INTERN),
+        (FRESHER, FRESHER),
+        (EXPERIENCED,  EXPERIENCED),
     ]
-    
+
+    REMOTE = "Remote"
+    ONSITE = "Onsite"
+    HYBRID = "Hybrid"
+
     WORK_MODES = [
-        ("remote", "Remote"),
-        ("onsite", "Onsite"),
-        ("hybrid", "Hybrid"),
+        (REMOTE, REMOTE),
+        (ONSITE, ONSITE),
+        (HYBRID, HYBRID),
     ]
+
     
-    DEFAULT_EXPERIENCE = 0  # Static variable
 
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -22,7 +30,7 @@ class Job(models.Model):
     about_company = models.TextField()
     job_type = models.CharField(max_length=20, choices=JOB_TYPES)
     work_mode = models.CharField(max_length=10, choices=WORK_MODES)
-    experience_required = models.IntegerField(default=DEFAULT_EXPERIENCE)
+    
 
     def __str__(self):
         return self.title
