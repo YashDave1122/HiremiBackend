@@ -1,4 +1,5 @@
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -15,14 +16,22 @@ def send_login_otp_to_email(user, otp):
     message = (
         f"Hi {user.full_name},\n\nYour OTP is: {otp}\n\nIt is valid for 5 minutes."
     )
-    send_mail(subject, message, "your_email@example.com", [user.email])
+    send_mail(subject, message, None, [user.email])
 
 
 def send_verification_otp_to_email(email, otp):
     # Send email
     subject = "Your OTP for verification"
     message = f"Hi {email},\n\nYour OTP is: {otp}\n\nIt is valid for 5 minutes."
-    send_mail(subject, message, "your_email@example.com", [email])
+    send_mail(subject, message, None, [email])
+
+
+def send_registration_mail(user):
+    # Send email
+    subject = "Welcome to Hiremi"
+    message = f"Congratulations {user.full_name},\n\n Your account has been created."
+    html_message = render_to_string("accounts/welcome_email.html", {"user": user})
+    send_mail(subject, message, None, [user.email], html_message=html_message)
 
 
 def send_password_reset_otp_to_email(user, otp):
@@ -31,8 +40,7 @@ def send_password_reset_otp_to_email(user, otp):
     message = (
         f"Hi {user.full_name},\n\nYour OTP is: {otp}\n\nIt is valid for 5 minutes."
     )
-    send_mail(subject, message, "your_email@example.com", [user.email])
-
+    send_mail(subject, message, None, [user.email])
 
 
 def generate_token_response(user, refresh):

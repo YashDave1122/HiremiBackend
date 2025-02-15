@@ -7,16 +7,19 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Account, City, Education, EmailOTP, State, PasswordResetOTP
+from .models import Account, City, Education, EmailOTP, PasswordResetOTP, State
 from .permissions import IsOwner, IsOwnerOrReadOnly, IsSelf, IsSelfOrReadOnly
 from .serializers import (AccountLoginSerializer, AccountLogoutSerializer,
                           AccountRegisterSerializer, AccountSerializer,
                           CitySerializer, EducationSerializer,
-                          GenerateOTPSerializer, StateSerializer,
-                          VerifyOTPSerializer, GeneratePasswordResetOTPSerializer,
-                          VerifyPasswordResetOTPSerializer, ResetPasswordSerializer)
+                          GenerateOTPSerializer,
+                          GeneratePasswordResetOTPSerializer,
+                          ResetPasswordSerializer, StateSerializer,
+                          VerifyOTPSerializer,
+                          VerifyPasswordResetOTPSerializer)
 from .utils import (generate_refresh_response, generate_token_response,
-                    send_login_otp_to_email, send_verification_otp_to_email, send_password_reset_otp_to_email)
+                    send_login_otp_to_email, send_password_reset_otp_to_email,
+                    send_registration_mail, send_verification_otp_to_email)
 
 User = get_user_model()
 
@@ -60,7 +63,9 @@ class AccountViewSet(viewsets.ModelViewSet):
         # Remove the OTP after successful registration
         email = serializer.validated_data["email"]
         email_otp = EmailOTP.objects.filter(email=email).order_by("-created_at").first()
-        email_otp.delete()
+        #email_otp.delete()
+
+        send_registration_mail(user)
 
         refresh = RefreshToken.for_user(user)
         return generate_token_response(user, refresh)
@@ -165,9 +170,9 @@ class AccountViewSet(viewsets.ModelViewSet):
         instance.save()
 
         return Response({"message": "OTP verified"}, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
-    def generate_password_reset_otp(self,request):
+    def generate_password_reset_otp(self, request):
         serializer = GeneratePasswordResetOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
@@ -185,7 +190,8 @@ class AccountViewSet(viewsets.ModelViewSet):
         otp = otp_instance.refresh_otp()
         send_password_reset_otp_to_email(user, otp)
         return Response(
-            {"message": "Password reset OTP sent to email."}, status=status.HTTP_201_CREATED
+            {"message": "Password reset OTP sent to email."},
+            status=status.HTTP_201_CREATED,
         )
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
@@ -198,9 +204,9 @@ class AccountViewSet(viewsets.ModelViewSet):
         instance.save()
 
         return Response({"message": "OTP verified"}, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
-    def reset_password(self,request):
+    def reset_password(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -212,7 +218,6 @@ class AccountViewSet(viewsets.ModelViewSet):
         reset_otp.delete()
 
         return Response({"message": "Password changed"}, status=status.HTTP_200_OK)
-        
 
     @action(detail=False, methods=["post"])
     def refresh_token(self, request):
