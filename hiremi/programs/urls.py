@@ -10,6 +10,7 @@ urlpatterns = [
     path('', include(router.urls)),
 
     # Custom User-Specific Enrollment Endpoints
-    path('accounts/<int:user_id>/enrollments/', EnrollmentViewSet.as_view({'get': 'user_enrollments', 'post': 'create'}), name='user-enrollments'),
+    path('accounts/<int:user_id>/enrollments/', EnrollmentViewSet.as_view({'get': 'list', 'post': 'create'}), name='user-enrollments'),
     path('accounts/<int:user_id>/enrollments/<int:pk>/', EnrollmentViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='user-enrollment-detail'),
 ]
+
