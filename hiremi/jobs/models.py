@@ -1,4 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.db import models
+
+User = get_user_model()
+
 
 class Job(models.Model):
     INTERN = "Intern"
@@ -43,6 +47,9 @@ class Application(models.Model):
         (REJECTED, REJECTED),
     ]
 
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="applications"
+    )
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="applications")
     date_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
