@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "notifications",
     "programs",
     "jobs",
+    "profile_details",
 ]
 
 MIDDLEWARE = [

@@ -1,18 +1,16 @@
 from django.contrib.auth import authenticate, get_user_model, logout
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Account, City, Education, EmailOTP, PasswordResetOTP, State
+from .models import Account, City, EmailOTP, PasswordResetOTP, State
 from .permissions import IsOwner, IsOwnerOrReadOnly, IsSelf, IsSelfOrReadOnly
 from .serializers import (AccountLoginSerializer, AccountLogoutSerializer,
                           AccountRegisterSerializer, AccountSerializer,
-                          CitySerializer, EducationSerializer,
-                          GenerateOTPSerializer,
+                          CitySerializer, GenerateOTPSerializer,
                           GeneratePasswordResetOTPSerializer,
                           ResetPasswordSerializer, StateSerializer,
                           VerifyOTPSerializer,
@@ -258,25 +256,3 @@ class StateViewSet(viewsets.ModelViewSet):
 class CityViewSet(viewsets.ModelViewSet):
     serializer_class = CitySerializer
     queryset = City.objects.order_by("name").all()
-
-
-class EducationViewSet(viewsets.ModelViewSet):
-    serializer_class = EducationSerializer
-
-    def get_queryset(self):
-        user_id = self.kwargs.get("user_id")
-        if user_id:
-            return Education.objects.filter(user_id=user_id)
-        return Education.objects.all()
-
-    def perform_create(self, serializer):
-        user_id = self.kwargs.get("user_id")
-        if user_id:
-            serializer.save(user_id=user_id)
-        else:
-            serializer.save()
-
-    def get_permission_classes(self):
-        if self.action in ["list", "retrieve"]:
-            return [IsAuthenticated()]
-        return [IsOwner()]

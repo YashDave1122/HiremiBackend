@@ -1,11 +1,10 @@
 from django.contrib.auth import authenticate, get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
-from phonenumbers import NumberParseException, is_valid_number, parse
-from rest_framework import exceptions, serializers, status
+from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import City, Education, EmailOTP, State, PasswordResetOTP
+from .models import City, EmailOTP, PasswordResetOTP, State
 
 User = get_user_model()
 
@@ -160,13 +159,6 @@ class VerifyOTPSerializer(serializers.ModelSerializer):
         return data
 
 
-class EducationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Education
-        fields = "__all__"
-        read_only_fields = ["user"]
-
-
 class GeneratePasswordResetOTPSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
@@ -180,7 +172,7 @@ class GeneratePasswordResetOTPSerializer(serializers.Serializer):
             raise serializers.ValidationError("User does not exist")
         data["user"] = user
         return data
-    
+
 
 class VerifyPasswordResetOTPSerializer(serializers.ModelSerializer):
 
@@ -195,7 +187,9 @@ class VerifyPasswordResetOTPSerializer(serializers.ModelSerializer):
         email = data.get("email")
         otp = data.get("otp")
 
-        reset_otp = PasswordResetOTP.objects.filter(email=email).order_by("-created_at").first()
+        reset_otp = (
+            PasswordResetOTP.objects.filter(email=email).order_by("-created_at").first()
+        )
 
         if not reset_otp:
             raise serializers.ValidationError({"email": "No OTP for that email"})
@@ -222,8 +216,10 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         # Check if passwords match
         if password != confirm_password:
-            raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
-        
+            raise serializers.ValidationError(
+                {"confirm_password": "Passwords do not match"}
+            )
+
         if len(password) < 8:
             raise serializers.ValidationError(
                 {"password": "Password must be atleast 8 characters"}
@@ -234,7 +230,9 @@ class ResetPasswordSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError({"email": "User not found"})
 
-        reset_otp = PasswordResetOTP.objects.filter(email=user.email, is_verified=True).first()
+        reset_otp = PasswordResetOTP.objects.filter(
+            email=user.email, is_verified=True
+        ).first()
         if not reset_otp:
             raise serializers.ValidationError({"otp": "OTP not verified or expired"})
 
