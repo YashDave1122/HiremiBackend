@@ -6,9 +6,9 @@ class Job(models.Model):
     EXPERIENCED = "Experienced"
 
     JOB_TYPES = [
-        (INTERN, "Intern"),
-        (FRESHER, "Fresher"),
-        (EXPERIENCED, "Experienced"),
+        (INTERN, INTERN),
+        (FRESHER, FRESHER),
+        (EXPERIENCED, EXPERIENCED),
     ]
 
     REMOTE = "Remote"
@@ -16,9 +16,9 @@ class Job(models.Model):
     HYBRID = "Hybrid"
 
     WORK_MODES = [
-        (REMOTE, "Remote"),
-        (ONSITE, "Onsite"),
-        (HYBRID, "Hybrid"),
+        (REMOTE, REMOTE),
+        (ONSITE, ONSITE),
+        (HYBRID, HYBRID),
     ]
 
     title = models.CharField(max_length=255, null=False, blank=False)
@@ -33,17 +33,19 @@ class Job(models.Model):
 
 
 class Application(models.Model):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+
+    STATUS_CHOICES = [
+        (PENDING, PENDING),
+        (ACCEPTED, ACCEPTED),
+        (REJECTED, REJECTED),
+    ]
+
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="applications")
     date_time = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ("pending", "Pending"),
-            ("accepted", "Accepted"),
-            ("rejected", "Rejected"),
-        ],
-        default="pending",  
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
 
     def __str__(self):
         return f"Application for {self.job.title} - {self.status}"
