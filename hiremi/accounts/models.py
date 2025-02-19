@@ -75,6 +75,8 @@ class Account(AbstractBaseUser, PermissionsMixin):
     whatsapp_number = PhoneNumberField(null=True, blank=True)
     current_pincode = models.CharField(max_length=10, null=True, blank=True)
 
+    career_stage = models.CharField(max_length=20, null=True, blank=True)
+
     is_differently_abled = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
 
