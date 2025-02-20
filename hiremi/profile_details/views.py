@@ -1,8 +1,9 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
-from .models import Experience, Project, SocialLink, Education
-from .serializers import ExperienceSerializer, ProjectSerializer, SocialLinkSerializer, EducationSerializer
-from accounts.permissions import IsOwner
+from .models import Experience, Project, SocialLink, Education, Language
+from .serializers import (ExperienceSerializer, ProjectSerializer, 
+                        SocialLinkSerializer, EducationSerializer, LanguageSerializer)
+from accounts.permissions import IsOwner, IsSuperUser
 
 class ExperienceViewSet(viewsets.ModelViewSet):
     serializer_class = ExperienceSerializer
@@ -90,3 +91,13 @@ class EducationViewSet(viewsets.ModelViewSet):
         if self.action in ["list", "retrieve"]:
             return [IsAuthenticated()]
         return [IsOwner()]
+
+
+class LanguageViewSet(viewsets.ModelViewSet):
+    serializer_class = LanguageSerializer
+    queryset = Language.objects.all()
+
+    def get_permission_classes(self):
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return [IsSuperUser()]

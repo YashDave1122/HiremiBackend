@@ -22,3 +22,7 @@ class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         return True
         # return bool(request.method in SAFE_METHODS or obj.user == request.user )
+
+class IsSuperUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_superuser
