@@ -19,7 +19,7 @@ class Experience(models.Model):
 class Project(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="projects")
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(null=True, blank=True)
     link = models.URLField(blank=True, null=True)
 
     def __str__(self):
@@ -28,7 +28,7 @@ class Project(models.Model):
 
 class SocialLink(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="social_links")
-    name = models.CharField(max_length=255)
+    platform = models.CharField(max_length=255)
     link = models.URLField()
 
     def __str__(self):

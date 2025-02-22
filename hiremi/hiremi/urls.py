@@ -24,7 +24,7 @@ urlpatterns = [
     path("", include("accounts.urls"), name="accounts"),
     path("", include("profile_details.urls"), name="profile_details"),
     path("", include('jobs.urls')),
-    path('notifications/', include('notifications.urls')),
-    path('programs/', include('programs.urls')),
+    path("", include('notifications.urls')),
+    path("", include('programs.urls')),
 
 ]
