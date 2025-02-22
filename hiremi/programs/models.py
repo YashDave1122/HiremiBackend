@@ -41,22 +41,19 @@ class Program(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def enroll_user(self, user):
+        Enrollment.objects.create(user=user, program=self)
 
 
 class Enrollment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enrollments")
-    program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name="enrollments")
-    date_enrolled = models.DateTimeField(auto_now_add=True)  # When the enrollment was created
-    end_date = models.DateField(null=True, blank=True)  # Program end date
-
  
- # Define static Variable
+    # Define static Variable
     PENDING  ='Pending'
     CONFIRMED = 'Confirmed'
     CANCELED = 'Canceled'
     REJECTED = 'Rejected'
    
-
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
@@ -64,16 +61,13 @@ class Enrollment(models.Model):
         ('Rejected','Rejected'),
        
     ]
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
-    PAYMENT_STATUS_CHOICES = [
-        ('Unpaid', 'Unpaid'),
-        ('Paid', 'Paid'),
-        ('Refunded', 'Refunded'),
-    ]
-    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='Unpaid')
-    payment_date = models.DateField(null=True, blank=True)
-   
   
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enrollments")
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name="enrollments")
+    date_enrolled = models.DateTimeField(auto_now_add=True)  # When the enrollment was created
+    end_date = models.DateField(null=True, blank=True)  # Program end date
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+
 
     def __str__(self):
         return f"{self.user.username} enrolled in {self.program.name}"

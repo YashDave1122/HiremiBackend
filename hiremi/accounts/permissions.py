@@ -13,20 +13,29 @@ class IsOwner(BasePermission):
         return True
         # return obj.user == request.user  # obj is owned the user instance
 
+
 class IsSelfOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         return True
         # return bool(request.method in SAFE_METHODS or obj == request.user )
+
 
 class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         return True
         # return bool(request.method in SAFE_METHODS or obj.user == request.user )
 
+
 class IsSuperUser(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_superuser
-    
+
+
 class IsStaff(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_staff
+    
+
+class IsVerified(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_verified

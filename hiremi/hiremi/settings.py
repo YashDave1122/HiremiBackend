@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "programs",
     "jobs",
     "profile_details",
+    "payments",
 ]
 
 MIDDLEWARE = [
