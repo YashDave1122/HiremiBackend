@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import VerificationOrder, EnrollmentOrder
+from .models import VerificationOrder, EnrollmentOrder, VerificationAmount
 from programs.models import Program, Enrollment
 
 User = get_user_model()
@@ -21,15 +21,11 @@ class EnrollmentOrderSerializer(serializers.ModelSerializer):
         read_only_fields = ['order_date']
 
 class StartVerificationPaymentSerializer(serializers.Serializer):
-    amount = serializers.IntegerField()
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     def validate(self,data):
-        amount = data.get('amount')
+        data['amount'] = VerificationAmount.get_amount()
         user = data.get('user')
-
-        if int(amount) < 0:
-            raise serializers.ValidationError("Amount should be positive")
         
         if user.is_verified:
             raise serializers.ValidationError("User already verified")
@@ -38,17 +34,13 @@ class StartVerificationPaymentSerializer(serializers.Serializer):
         
         
 class StartEnrollmentPaymentSerializer(serializers.Serializer):
-    amount = serializers.IntegerField()
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     program = serializers.PrimaryKeyRelatedField(queryset=Program.objects.all())
     def validate(self,data):
-        amount = data.get('amount')
         user = data.get('user')
         program = data.get('program')
+        data['amount'] = program.sale_price or program.price
 
-        if int(amount) < 0:
-            raise serializers.ValidationError("Amount should be positive")
-        
         if not program:
             raise serializers.ValidationError("Program ID is required for program order")
         

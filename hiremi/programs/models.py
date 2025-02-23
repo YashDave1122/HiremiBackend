@@ -25,8 +25,8 @@ class Program(models.Model):
     ]
 
     name = models.CharField(max_length=255, unique=True)  # Program name
-    price = models.DecimalField(max_digits=10, decimal_places=2)  # Program fee
-    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  
+    price = models.IntegerField()  # Program fee
+    sale_price = models.IntegerField(null=True, blank=True)  
     description = models.TextField(blank=True, null=True)  # Program description
     duration = models.CharField(max_length=50, null=True, blank=True)
     is_active =  models.CharField(max_length=5,choices=[('Yes', 'Yes'), ('No', 'No')],default='Yes')  # Whether the program is active

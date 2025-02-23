@@ -60,7 +60,7 @@ class HandleVerificationPaymentSuccessView(APIView):
         order.user.save()
 
         res_data = {
-            'message': 'payment successfully received!'
+            'message': 'payment successfully received! User is now verified'
         }
 
         return Response(res_data)
@@ -110,7 +110,7 @@ class HandleEnrollmentPaymentSuccessView(APIView):
         order.program.enroll_user(order.user)
 
         res_data = {
-            'message': 'payment successfully received!'
+            'message': f'payment successfully received! {order.user.full_name} enrolled in {order.program.name}'
         }
 
         return Response(res_data)
