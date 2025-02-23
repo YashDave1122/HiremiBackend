@@ -53,8 +53,8 @@ class AccountRegisterSerializer(serializers.ModelSerializer):
 
         email_otp = EmailOTP.objects.filter(email=email).order_by("-created_at").first()
 
-        if not email_otp or not email_otp.is_verified:
-            raise serializers.ValidationError({"email": "Email not verified."})
+        #if not email_otp or not email_otp.is_verified:
+        #    raise serializers.ValidationError({"email": "Email not verified."})
 
         if role == User.SUPER_ADMIN:
             raise serializers.ValidationError(
