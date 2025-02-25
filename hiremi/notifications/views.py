@@ -16,41 +16,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     permission_classes = [IsAuthenticated]
 
-
-class UserNotificationViewSet(viewsets.ModelViewSet):
-    
-    """ Handles user-specific notifications."""
-    
-    serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
-
     def get_queryset(self):
-      
-        " Allow only the logged-in user or an admin to access notifications."
-        
-        user_id = self.kwargs.get("user_id")
-
-        if self.request.user.id != int(user_id) and not self.request.user.is_staff:
-            return Notification.objects.none()
-
-        return Notification.objects.filter(user_id=user_id)
-
-    def perform_create(self, serializer):
-        
-        " Ensure the notification is created for the specified user in the URL."
-        
-        user_id = self.kwargs.get("user_id")
-        user = get_object_or_404(User, id=user_id)
-        serializer.save(user=user)
-
-    def user_notifications(self, request, user_id):
-        
-        if request.user.id != int(user_id) and not request.user.is_staff:
-            return Response({"error": "Unauthorized access"}, status=403)
-
-        queryset = Notification.objects.filter(user_id=user_id)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        user = self.request.user
+        if user.is_staff:
+                return super().get_queryset()
+        return Notification.objects.filter(user= user)
+                
 
 
 
+
+   
