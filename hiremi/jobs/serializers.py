@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, Application, Skill, Interest
+from .models import Job, Application, Skill, Interest, UserProfile
 
 class JobSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,3 +20,13 @@ class InterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interest
         fields = '__all__'
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    interests = InterestSerializer(many=True, read_only=True)
+    interest_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Interest.objects.all(), source="interests", many=True, write_only=True
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'user', 'interests', 'interest_ids']
