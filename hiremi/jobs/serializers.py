@@ -20,6 +20,9 @@ class InterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interest
         fields = '__all__'
+        extra_kwargs = {
+            'interest': {'validators': []}  
+        }
 
 class UserProfileSerializer(serializers.ModelSerializer):
     interests = InterestSerializer(many=True, read_only=True)
