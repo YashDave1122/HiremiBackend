@@ -66,8 +66,10 @@ class Skill(models.Model):
 
 
 class Interest(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    interest = models.CharField(max_length=255, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="interest")
 
+    
     def __str__(self):
         return self.name
     
