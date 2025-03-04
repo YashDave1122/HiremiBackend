@@ -24,8 +24,8 @@ class Job(models.Model):
         (ONSITE, ONSITE),
         (HYBRID, HYBRID),
     ]
-    # name = models.CharField(max_length=255, null=False, blank=False)
-    titleeeee = models.CharField(max_length=255, null=False, blank=False)
+    name = models.CharField(max_length=255, null=False, blank=False)
+    title = models.CharField(max_length=255, null=False, blank=False)
     description = models.TextField(null=False, blank=False)
     eligibility = models.TextField(null=False, blank=False)
     about_company = models.TextField(null=False, blank=False)
