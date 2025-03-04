@@ -72,6 +72,19 @@ class Interest(models.Model):
     def __str__(self):
         return self.interest
     
+class AskExpert(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="AskExpert")
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    gender = models.CharField(max_length=10,)
+    subject = models.CharField(max_length=255)
+    query_type = models.CharField(max_length=20,)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return self.full_name
+    
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     interests = models.ManyToManyField(Interest, blank=True)
