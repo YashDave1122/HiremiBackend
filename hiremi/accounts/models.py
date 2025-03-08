@@ -45,7 +45,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [(MALE, MALE), (FEMALE, FEMALE), (OTHER, OTHER)]
 
     email = models.EmailField(unique=True)
-    full_name = models.CharField(max_length=200)
+    full_nameeee = models.CharField(max_length=200)
     father_name = models.CharField(max_length=200)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     date_of_birth = models.DateField()
