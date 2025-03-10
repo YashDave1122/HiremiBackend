@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 
-from hiremi_backend.hiremi.accounts.models import City, State
-# from myapp.models import State, City
+# from hiremi_backend.hiremi.accounts.models import City, State
+# from accounts import City,State
+from accounts.models import State, City
 
 class Command(BaseCommand):
     help = "Load Indian states and cities into the database"
