@@ -12,25 +12,39 @@ from .managers import AccountManager
 
 
 # Create your models here.
-class State(models.Model):
-    name = models.CharField(primary_key=True, max_length=50)
+# class State(models.Model):
+#     name = models.CharField(primary_key=True, max_length=50)
 
-    def __str__(self):
+#     def __str__(self):
+#         return self.name
+
+
+# class City(models.Model):
+#     name = models.CharField(max_length=50)
+#     state = models.ForeignKey(
+#         State, on_delete=models.SET_NULL, related_name="state_cities", null=True
+#     )
+
+#     def __str__(self):
+#         return f"{self.name} - {self.state}"
+
+#     class Meta:
+#         verbose_name_plural = "cities"
+#         unique_together = ["name", "state"]
+# #########################################################################
+class State(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def _str_(self):
         return self.name
 
-
 class City(models.Model):
-    name = models.CharField(max_length=50)
-    state = models.ForeignKey(
-        State, on_delete=models.SET_NULL, related_name="state_cities", null=True
-    )
+    name = models.CharField(max_length=100)
+    state = models.ForeignKey(State, related_name='cities', on_delete=models.CASCADE)
 
-    def __str__(self):
-        return f"{self.name} - {self.state}"
-
-    class Meta:
-        verbose_name_plural = "cities"
-        unique_together = ["name", "state"]
+    # def _str_(self):
+    def __str__(self):  # ✅ Correct (double underscores)
+        return f"{self.name}, {self.state.name}"
 
 
 class Account(AbstractBaseUser, PermissionsMixin):

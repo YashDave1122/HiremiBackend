@@ -9,15 +9,29 @@ from .models import City, EmailOTP, PasswordResetOTP, State
 User = get_user_model()
 
 
+# class StateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = State
+#         fields = "__all__"
+
+
+# class CitySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = City
+#         fields = "__all__"
+
 class StateSerializer(serializers.ModelSerializer):
     class Meta:
         model = State
+        # fields = ['name'] 
         fields = "__all__"
 
-
 class CitySerializer(serializers.ModelSerializer):
+    state = serializers.CharField(source='state.name')  # State ko direct naam me convert karo
+
     class Meta:
         model = City
+        # fields = ['id', 'name', 'state']
         fields = "__all__"
 
 

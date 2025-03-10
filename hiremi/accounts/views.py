@@ -19,6 +19,13 @@ from .utils import (generate_refresh_response, generate_token_response,
                     send_login_otp_to_email, send_password_reset_otp_to_email,
                     send_registration_mail, send_verification_otp_to_email)
 
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.db.models.functions import Lower  # Case-insensitive sorting
+from .models import State, City
+from .serializers import StateSerializer, CitySerializer
+
+
 User = get_user_model()
 
 
@@ -242,17 +249,40 @@ class AccountViewSet(viewsets.ModelViewSet):
             )
 
 
-class StateViewSet(viewsets.ModelViewSet):
-    serializer_class = StateSerializer
-    queryset = State.objects.order_by("name").all()
+# class StateViewSet(viewsets.ModelViewSet):
+#     serializer_class = StateSerializer
+#     queryset = State.objects.order_by("name").all()
 
-    @action(detail=True, methods=["get"], name=None)
-    def cities(self, request, pk=None):
-        cities = City.objects.filter(state=self.get_object())
+#     @action(detail=True, methods=["get"], name=None)
+#     def cities(self, request, pk=None):
+#         cities = City.objects.filter(state=self.get_object())
+#         serializer = CitySerializer(cities, many=True)
+#         return Response(serializer.data)
+
+
+# class CityViewSet(viewsets.ModelViewSet):
+#     serializer_class = CitySerializer
+#     queryset = City.objects.order_by("name").all()
+@api_view(['GET'])
+def get_states(request):
+    states = State.objects.all().order_by(Lower("name"))  # ✅ Alphabetically sorted states
+    serializer = StateSerializer(states, many=True)  
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_cities(request):
+    cities = City.objects.all().order_by(Lower("name"))  # ✅ Alphabetically sorted cities
+    serializer = CitySerializer(cities, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_state_cities(request, state_name):
+    try:
+        state = State.objects.get(name=state_name)
+        cities = City.objects.filter(state=state).order_by(Lower("name"))  # ✅ Sorted cities
         serializer = CitySerializer(cities, many=True)
         return Response(serializer.data)
-
-
-class CityViewSet(viewsets.ModelViewSet):
-    serializer_class = CitySerializer
-    queryset = City.objects.order_by("name").all()
+    except State.DoesNotExist:
+        return Response({"error": "State not found"}, status=404)
