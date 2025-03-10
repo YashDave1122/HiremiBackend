@@ -39,7 +39,7 @@ class State(models.Model):
         return self.name
 
 class City(models.Model):
-    name = models.CharField(max_length=100)
+    namee = models.CharField(max_length=100)
     state = models.ForeignKey(State, related_name='cities', on_delete=models.CASCADE)
 
     # def _str_(self):
